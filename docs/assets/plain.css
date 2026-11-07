@@ -1,0 +1,18 @@
+/* The plain pages: the privacy policy and the 404. */
+@font-face { font-family: "Inter"; src: url("fonts/inter.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+@font-face { font-family: "Newsreader"; src: url("fonts/newsreader.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+:root { color-scheme: light; --bg: #F8FAFC; --ink: #1E293B; --soft: #566479; --rule: #E2E8F0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.0625rem/1.62 "Inter", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px; }
+:focus-visible { outline: 2px solid #F2B33D; outline-offset: 3px; border-radius: 4px; }
+.top, .end { max-width: 44rem; margin: 0 auto; padding: 1.25rem; }
+.top a { font-weight: 500; text-decoration: none; }
+.end { display: flex; gap: 1.5rem; color: var(--soft); padding-bottom: 3rem; }
+main { max-width: 44rem; margin: 0 auto; padding: 2rem 1.25rem 2.5rem; }
+h1 { margin: 0 0 .4rem; font: 500 clamp(2.6rem, 8vw, 4rem)/1.04 "Newsreader", Georgia, serif; letter-spacing: -.025em; text-wrap: balance; }
+h2 { margin: 2.25rem 0 .4rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); font-size: 1.15rem; font-weight: 600; letter-spacing: -.01em; }
+p { margin: .6rem 0; text-wrap: pretty; }
+.meta { color: var(--soft); margin-bottom: 1.75rem; }
+.lost { display: grid; min-height: 100svh; align-items: center; }
+.lost main { padding-block: 4rem; }

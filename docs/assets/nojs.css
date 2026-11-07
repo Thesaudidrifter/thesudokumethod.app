@@ -1,0 +1,10 @@
+/* Without scripts the page is a plain article: every word is still here, and the stage is not pinned. */
+[data-sc-cue] { opacity: 1 !important; }
+.stage { position: static; height: auto; overflow: visible; padding: 80px var(--gutter) 0; }
+.camera, .clock, .close, .texture { display: none; }
+.hero, .note, .themes { position: static; translate: none; width: auto; max-width: 40rem; margin-bottom: 3rem; }
+.card { box-shadow: none; padding: 0; background: none; }
+.tech { display: none; }
+.rail-wrap { position: static; visibility: visible; opacity: 1; overflow-x: auto; }
+.rail { padding-top: 0; }
+#themeName, #themeTier { display: none; }

@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Sudoku Method: logic-only Sudoku for Android</title>
+<meta name="description" content="Logic-only Sudoku with guided hints, a daily Challenge and a review of every solve. Every puzzle has one solution and never needs a guess.">
+<link rel="canonical" href="https://thesudokumethod.app/">
+<meta name="theme-color" content="#F8FAFC">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Sudoku Method">
+<meta property="og:title" content="There is always a next move.">
+<meta property="og:description" content="Logic-only Sudoku for Android, with hints that teach before they tell.">
+<meta property="og:url" content="https://thesudokumethod.app/">
+<meta property="og:image" content="https://thesudokumethod.app/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/newsreader.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter.woff2" crossorigin>
+<link rel="stylesheet" href="engine/scrollcraft.css">
+<link rel="stylesheet" href="assets/site.css">
+<noscript><link rel="stylesheet" href="assets/nojs.css"></noscript>
+<script>document.documentElement.classList.remove('no-js');</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MobileApplication",
+  "name": "The Sudoku Method",
+  "operatingSystem": "Android",
+  "applicationCategory": "GameApplication",
+  "url": "https://thesudokumethod.app/",
+  "description": "Logic-only Sudoku with guided hints, a daily Challenge and a review of every solve."
+}
+</script>
+</head>
+<body>
+
+<header class="bar" id="bar">
+  <a class="brand" href="#top" aria-label="The Sudoku Method, back to the top">
+    <svg class="mark" viewBox="0 0 30 30" aria-hidden="true">
+      <path d="M1 1h28v28H1zM10.33 1v28M19.67 1v28M1 10.33h28M1 19.67h28" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <rect x="11.1" y="11.1" width="7.8" height="7.8" fill="currentColor" opacity=".12"/>
+      <text x="15" y="18" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor">9</text>
+    </svg>
+    <span>The Sudoku Method</span>
+  </a>
+  <p class="clock" aria-hidden="true"><b id="clock">0:00</b> <span id="mistakes">0 mistakes</span></p>
+  <p class="get" data-cta>Coming soon to Google Play</p>
+</header>
+
+<main id="top">
+  <section id="solve" data-sc-act="pin" data-sc-span="12.4" aria-label="A Sudoku solved one move at a time">
+    <div data-sc-stage class="stage" id="stage">
+      <div class="texture" aria-hidden="true"></div>
+
+      <div class="camera" id="camera" aria-hidden="true">
+        <div class="tilt" id="tilt">
+          <div class="board" id="board"></div>
+        </div>
+      </div>
+
+      <div class="hero" data-beat="hero lift" data-hold-start>
+        <h1>There is always a&nbsp;next&nbsp;move.</h1>
+        <p class="lede">The Sudoku Method is logic-only Sudoku for Android. It teaches you how to find that move.</p>
+        <p class="get get--solid" data-cta>Coming soon to Google Play</p>
+      </div>
+
+      <article class="note card" data-beat="look">
+        <h2><span class="count">1/3</span> Look in this box</h2>
+        <p>One digit has only one cell left here.</p>
+      </article>
+      <article class="note card" data-beat="find">
+        <h2><span class="count">2/3</span> Find the 5</h2>
+        <p>The highlighted 5s rule out the other empty cells in this box. Only one cell is left for a 5.</p>
+      </article>
+      <article class="note card" data-beat="place">
+        <h2><span class="count">3/3</span> It's a 5</h2>
+        <p>It's the only cell in this box that can hold a 5.</p>
+      </article>
+      <article class="note" data-beat="teach">
+        <h2>Hints teach before they tell.</h2>
+        <p>Where to look, why it works, and only then the digit. All three steps count as one hint.</p>
+      </article>
+
+      <article class="note note--r" data-beat="run">
+        <h2>You never have to guess.</h2>
+        <p>Every puzzle has exactly one solution and can be solved by logic alone. Each one is rated by the hardest technique it needs, from Easy to Expert.</p>
+        <p class="tech" aria-hidden="true"><span id="tech">Hidden Single</span></p>
+      </article>
+
+      <article class="note" data-beat="stall">
+        <h2>Then the easy digits run out.</h2>
+        <p>Pencil in what's still possible, and start reading the board.</p>
+      </article>
+      <article class="note" data-beat="narrow">
+        <h2>Now you read the marks.</h2>
+        <p>11 short chapters take you from the rules to advanced techniques, with practice on real boards.</p>
+        <p class="tech" aria-hidden="true"><span id="tech2">Pointing</span></p>
+      </article>
+      <article class="note note--r" data-beat="xwing" data-window="0.02 0.6">
+        <h2>X-Wing</h2>
+        <p>In each of these two rows, the 6 has just two cells left, and they line up. So the rest of those two columns can't be a 6.</p>
+      </article>
+      <article class="note note--r" data-beat="fall" data-window="0 0.82">
+        <h2>One idea opens the whole board.</h2>
+      </article>
+
+      <section class="rail-wrap" id="railWrap" aria-label="Inside the app">
+        <div class="rail" id="rail">
+          <div class="rail-lead">
+            <h2>Everything around the board.</h2>
+            <p>Real screens from the app.</p>
+          </div>
+          <figure>
+            <img src="assets/screens/challenge.jpg" width="675" height="1400" fetchpriority="low" decoding="async" alt="The Challenge screen: today's Medium puzzle, your streak and a calendar of the month.">
+            <figcaption><b>Challenge</b> One puzzle a day in each difficulty, the same for everyone. Solve it on the day to build a streak.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/screens/learn.jpg" width="675" height="1400" fetchpriority="low" decoding="async" alt="The Lessons screen, with beginner chapters such as Hidden Single and advanced chapters such as Pointing.">
+            <figcaption><b>Lessons</b> 11 short chapters, from the rules to advanced techniques.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/screens/report.jpg" width="675" height="1400" fetchpriority="low" decoding="async" alt="A report after a solve: where the player got stuck, a link to the lesson, and what to try next.">
+            <figcaption><b>Your report</b> After each solve: your blind spots, the techniques you used and what to try next.</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/screens/stats.jpg" width="675" height="1400" fetchpriority="low" decoding="async" alt="The Statistics screen, showing perfect games, streaks and best times.">
+            <figcaption><b>Statistics</b> Perfect games, streaks and best times, for every difficulty.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <div class="themes" data-beat="themes">
+        <h2>One board. Eight ways to see it.</h2>
+        <p class="theme-name" id="themeName">Onyx</p>
+        <p class="theme-tier" id="themeTier">Free</p>
+      </div>
+
+      <div class="close" id="close">
+        <div class="ask" id="ask">
+          <h2>One cell left.</h2>
+          <p id="askLine">Its row, column and box already hold eight different digits. Which one is missing?</p>
+          <div class="pad" id="pad" role="group" aria-label="Place a digit in the last cell"></div>
+        </div>
+        <div class="result" id="result" hidden>
+          <div class="stars" id="stars" aria-hidden="true"></div>
+          <h2 id="resultTitle" tabindex="-1">Perfect game</h2>
+          <p class="sub">The Unhurried Library. Expert, hardest step X-Wing.</p>
+          <dl class="score">
+            <div><dd id="scoreMistakes">0</dd><dt id="scoreMistakesLabel">mistakes</dt></div>
+            <div><dd>1</dd><dt>hint</dt></div>
+            <div><dd id="scoreTime">0:00</dd><dt>time to beat 25:30</dt></div>
+          </dl>
+          <p class="verdict" id="verdict"></p>
+          <p class="more">That was your own solve, timed from your first scroll. In the app, each one ends with a report like this.</p>
+          <p class="get get--solid" data-cta>Coming soon to Google Play</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="after" id="get">
+    <div class="after-head">
+      <h2>Free to play. One payment for the rest.</h2>
+      <p class="get get--solid" data-cta>Coming soon to Google Play</p>
+    </div>
+
+    <div class="plans">
+      <div>
+        <h3>Free</h3>
+        <ul>
+          <li>Daily Challenge in four difficulties</li>
+          <li>Play a fresh puzzle whenever you want one</li>
+          <li>Guided hints and a report after each solve</li>
+          <li>Lessons, from the rules to advanced techniques</li>
+          <li>Paper and Onyx themes</li>
+          <li>Ads between puzzles and on the home screen</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Premium</h3>
+        <p class="plan-line">One payment, no subscription.</p>
+        <ul>
+          <li>No ads</li>
+          <li>Every theme, each with its own colours, type and logo</li>
+          <li>Unlimited mistakes in Challenge and checks in Play</li>
+          <li>Centre marks, cell colours, and multi-select with number lock</li>
+          <li>Ad-free streak freezes</li>
+          <li>The Expert lessons</li>
+        </ul>
+      </div>
+    </div>
+
+    <dl class="faq">
+      <div>
+        <dt>Is every puzzle fair?</dt>
+        <dd>Yes. Every puzzle has one solution and never requires a guess. The daily Challenge is the same for every player, and there are no virtual coins or boosters to buy.</dd>
+      </div>
+      <div>
+        <dt>Does it need an account?</dt>
+        <dd>No. There is no account and no sign-in, and it works offline. Your games and settings stay on your phone.</dd>
+      </div>
+      <div>
+        <dt>Which phones does it run on?</dt>
+        <dd>Android 8.0 or newer. On a foldable, the board and tools adapt when you unfold your phone.</dd>
+      </div>
+      <div>
+        <dt>Where do I send feedback?</dt>
+        <dd>Email <a href="mailto:thesudokumethod@gmail.com">thesudokumethod@gmail.com</a> with any feature, theme or technique you'd like to see.</dd>
+      </div>
+    </dl>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>The Sudoku Method</p>
+  <nav aria-label="Footer">
+    <a href="privacy/">Privacy policy</a>
+    <a href="mailto:thesudokumethod@gmail.com">Contact</a>
+  </nav>
+</footer>
+
+<script src="engine/scrollcraft.js" defer></script>
+<script src="assets/solve.js" defer></script>
+<script src="assets/board.js" defer></script>
+<script src="assets/page.js" defer></script>
+</body>
+</html>
