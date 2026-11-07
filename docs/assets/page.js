@@ -145,6 +145,8 @@
     while (box.children.length < points.length) box.appendChild(document.createElement('i'));
     points.forEach(function (p, i) { box.children[i].style.top = Math.round(p * span) + 'px'; });
     rests = points;
+    // snapping starts only once the stops are in place, or the browser snaps the opening view to the foot of the page
+    html.classList.add('snap');
   }
 
   function pose(a, b, t) {

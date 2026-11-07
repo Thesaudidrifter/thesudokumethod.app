@@ -1,6 +1,6 @@
 /* Without scripts the page is a plain article: every word is still here, and the stage is not pinned. */
 [data-beat] { opacity: 1 !important; }
-.skip, .rests { display: none; }
+.skip, .rests, .nudge { display: none; }
 .stage { position: static; height: auto; overflow: visible; padding: 80px var(--gutter) 0; }
 .lens, .clock, .close, .texture { display: none; }
 .hero, .note, .themes { position: static; translate: none; width: auto; max-width: 40rem; margin-bottom: 3rem; }

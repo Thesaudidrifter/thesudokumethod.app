@@ -21,9 +21,9 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/newsreader.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter.woff2" crossorigin>
-<link rel="stylesheet" href="engine/scrollcraft.css?v=2">
-<link rel="stylesheet" href="assets/site.css?v=2">
-<noscript><link rel="stylesheet" href="assets/nojs.css?v=2"></noscript>
+<link rel="stylesheet" href="engine/scrollcraft.css?v=3">
+<link rel="stylesheet" href="assets/site.css?v=3">
+<noscript><link rel="stylesheet" href="assets/nojs.css?v=3"></noscript>
 <script>document.documentElement.classList.remove('no-js');</script>
 <script type="application/ld+json">
 {
@@ -71,6 +71,11 @@
         <p class="lede">The Sudoku Method is logic-only Sudoku for Android. It teaches you how to find that move.</p>
         <p class="get get--solid" data-cta>Coming soon to Google Play</p>
       </div>
+      <p class="nudge" data-beat="hero" data-hold-start aria-hidden="true">
+        <span class="nudge-mouse">Scroll down to watch it solve</span><span class="nudge-touch">Swipe up to watch it solve</span>
+        <svg class="nudge-mouse" viewBox="0 0 16 16"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="nudge-touch nudge-up" viewBox="0 0 16 16"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </p>
 
       <article class="note card" data-beat="look" data-window="0.35 1">
         <h2><span class="count">1/3</span> Look in this box</h2>
@@ -152,7 +157,7 @@
         </div>
       </div>
     </div>
-    <div class="rests" id="rests" aria-hidden="true"></div>
+    <div class="rests" id="rests" aria-hidden="true"><i style="top:0"></i></div>
   </section>
 
   <section class="after" id="get">
@@ -216,9 +221,9 @@
   </nav>
 </footer>
 
-<script src="engine/scrollcraft.js?v=2" defer></script>
-<script src="assets/solve.js?v=2" defer></script>
-<script src="assets/board.js?v=2" defer></script>
-<script src="assets/page.js?v=2" defer></script>
+<script src="engine/scrollcraft.js?v=3" defer></script>
+<script src="assets/solve.js?v=3" defer></script>
+<script src="assets/board.js?v=3" defer></script>
+<script src="assets/page.js?v=3" defer></script>
 </body>
 </html>

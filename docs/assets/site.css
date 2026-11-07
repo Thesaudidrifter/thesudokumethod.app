@@ -90,7 +90,7 @@ html.past .clock { visibility: hidden; }
 .rests { position: absolute; inset: 0; pointer-events: none; }
 .rests i { position: absolute; left: 0; width: 1px; height: 1px; }
 @media (pointer: coarse) {
-  html { scroll-snap-type: y mandatory; }
+  html.snap { scroll-snap-type: y mandatory; }
   .rests i { scroll-snap-align: start; scroll-snap-stop: always; }
   .after { scroll-snap-align: start; }
   .foot { scroll-snap-align: end; }
@@ -231,6 +231,24 @@ a.get--solid:active { transform: scale(.97); }
 .tech { margin-top: var(--sc-5) !important; font-size: 1rem !important; color: var(--ink) !important; font-weight: 500; }
 .tech span { display: inline-block; padding: .35rem .75rem; border-radius: 8px; background: var(--zone); }
 
+/* The one hint that the page moves: it goes with the opening scene. */
+.nudge {
+  position: absolute; z-index: 3; left: var(--gutter); bottom: max(5vh, 24px); margin: 0; width: max-content;
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .55rem .95rem .55rem 1.05rem; border-radius: 999px;
+  background: var(--surface); color: var(--ink); font-size: .95rem; font-weight: 500;
+  box-shadow: 0 0 0 1px hsl(217 33% 17% / .08), 0 8px 24px -8px hsl(217 33% 17% / .25);
+}
+.nudge svg { flex: none; width: 16px; height: 16px; animation: nudge 1.6s var(--sc-ease-in-out) infinite; }
+.nudge .nudge-up { animation-name: nudge-up; }
+.nudge-touch { display: none; }
+html.touch span.nudge-touch { display: inline; }
+html.touch svg.nudge-touch { display: block; }
+html.touch .nudge-mouse { display: none; }
+@keyframes nudge { 50% { transform: translateY(3px); } }
+@keyframes nudge-up { 50% { transform: translateY(-3px); } }
+html:not(.wide) .nudge { left: 50%; translate: -50% 0; bottom: calc(18px + env(safe-area-inset-bottom)); white-space: nowrap; }
+
 /* -------------------------------------------------------------------------------------------- the app, a rail -- */
 .rail-wrap { position: absolute; inset: 0; z-index: 2; visibility: hidden; opacity: 0; display: flex; align-items: center; overflow: hidden; }
 .rail { display: flex; align-items: center; gap: clamp(2.5rem, 6vw, 6rem); padding: 72px var(--gutter) var(--sc-5); width: max-content; }
@@ -367,7 +385,7 @@ html:not(.wide) .result .get--solid { display: block; text-align: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .d.drop, .d.shake, .star { animation: none; }
+  .d.drop, .d.shake, .star, .nudge svg { animation: none; }
   .fill { transition: none; }
   .rail-wrap { overflow-x: auto; }
 }
