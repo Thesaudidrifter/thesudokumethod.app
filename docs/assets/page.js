@@ -1,5 +1,6 @@
-/* The page: one real solve, driven by scroll. scene(p) turns a scroll position into everything on screen and holds no
-   state of its own, so scrolling back rewinds the solve exactly. */
+/* The page: one real solve, told in scenes. Scroll picks the moment and the page plays to it at a readable pace, so a
+   hard flick never blurs the solve. scene(p) turns a position in the story into everything on screen, so scrolling
+   back rewinds the solve exactly. On touch screens every swipe stops at the next scene. */
 (function () {
   'use strict';
 
@@ -8,12 +9,12 @@
 
   var SOLVE = window.SOLVE;
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var touch = matchMedia('(pointer: coarse)').matches;
   var CAN_IRIS = !reduce && (CSS.supports('backdrop-filter', 'invert(1)') || CSS.supports('-webkit-backdrop-filter', 'invert(1)'));
   var html = document.documentElement;
   var $ = function (id) { return document.getElementById(id); };
 
   var givens = SOLVE.givens.split('').map(Number);
-  var solution = SOLVE.solution.split('').map(Number);
   var snap = Board.replay(givens, SOLVE.steps);
   var LAST_FRAME = SOLVE.steps.length - 1;     // every step but the visitor's
   var LAST_CELL = SOLVE.steps[LAST_FRAME].pl[0][0];
@@ -23,41 +24,71 @@
 
   var board = Board.create($('board'), givens);
 
-  /* ------------------------------------------------------------ timeline: name, viewport-heights of scroll ------ */
+  /* ------------------------------------------------------------------------------------------------ timeline --- */
+  /* Each scene: its name, its share of the scroll (viewport heights), how long it takes to play (seconds), and where
+     a swipe comes to rest in it (0 to 1). */
   var BEATS = [
-    ['hero', .5], ['lift', .4], ['look', .6], ['find', .8], ['place', .5], ['teach', .4], ['run', 1.1],
-    ['stall', .9], ['narrow', .6], ['xwing', 1.2], ['fall', 1.5], ['rail', 2.0], ['themes', 1.6], ['last', .8],
+    ['hero', .6, .8, 0], ['look', .8, 1.3, .86], ['find', .9, 1.7, .88], ['place', .8, 1.3, .88], ['run', 1.0, 2.2, .9],
+    ['stall', .9, 1.8, .88], ['xwing', 1.3, 3.0, .9], ['fall', 1.0, 2.2, .9], ['rail', 1.2, 2.6, null],
+    ['themes', .9, .9, .5], ['last', .8, .9, .9],
   ];
   var TOTAL = BEATS.reduce(function (a, b) { return a + b[1]; }, 0);
   var at = {}, run = 0;
-  BEATS.forEach(function (b) { at[b[0]] = { from: run / TOTAL, to: (run + b[1]) / TOTAL }; run += b[1]; });
+  BEATS.forEach(function (b, i) { at[b[0]] = { i: i, from: run / TOTAL, to: (run + b[1]) / TOTAL }; run += b[1]; });
 
   function locate(p) {
     for (var i = 0; i < BEATS.length; i++) {
       var w = at[BEATS[i][0]];
-      if (p < w.to || i === BEATS.length - 1) return { name: BEATS[i][0], u: clamp((p - w.from) / (w.to - w.from), 0, 1) };
+      if (p < w.to || i === BEATS.length - 1) return { name: BEATS[i][0], i: i, u: clamp((p - w.from) / (w.to - w.from), 0, 1) };
     }
+  }
+  /* Story position in scenes (2.5 is halfway through the third), and back. */
+  function toScenes(p) { var l = locate(p); return l.i + l.u; }
+  function toP(b) {
+    var i = Math.min(BEATS.length - 1, Math.floor(b)), w = at[BEATS[i][0]];
+    return w.from + (w.to - w.from) * clamp(b - i, 0, 1);
   }
 
   function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
   function ease(x) { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }
   function range(u, a, b) { return clamp((u - a) / (b - a), 0, 1); }
 
-  /* -------------------------------------------------------------------------- copy windows, fed to the engine --- */
+  /* ----------------------------------------------------------------------------------------------- the copy ---- */
+  /* Each note shows across its scene, fading in and out at the edges, and follows the story as played, not the
+     scroll bar, so the words always match the board. */
+  var cues = [];
   document.querySelectorAll('[data-beat]').forEach(function (e) {
     var names = e.getAttribute('data-beat').split(' ');
     var a = at[names[0]], b = at[names[names.length - 1]];
     var win = (e.getAttribute('data-window') || '0 1').split(' ').map(Number);
     var len = b.to - a.from;
     var from = a.from + len * win[0], to = a.from + len * win[1];
-    if (e.hasAttribute('data-hold-start')) { e.setAttribute('data-sc-cue', '0 ' + to.toFixed(4) + ' 0 0.3'); return; }
-    var edge = 0.1 / TOTAL;
-    var ramp = clamp(edge / (to - from), 0.05, 0.3).toFixed(3);
-    e.setAttribute('data-sc-cue', from.toFixed(4) + ' ' + to.toFixed(4) + ' ' + ramp + ' ' + ramp);
+    var ramp = Math.min((to - from) * .3, .08 / TOTAL);
+    cues.push({ el: e, from: from, to: to, ramp: ramp, greet: e.hasAttribute('data-hold-start'), vis: -1 });
   });
 
+  function cueVis(q, p) {
+    if (q.greet) return p <= q.to - q.ramp ? 1 : ease(1 - (p - (q.to - q.ramp)) / q.ramp);
+    if (p <= q.from || p >= q.to) return 0;
+    if (p < q.from + q.ramp) return ease((p - q.from) / q.ramp);
+    if (p > q.to - q.ramp) return ease((q.to - p) / q.ramp);
+    return 1;
+  }
+
+  function setCues(p) {
+    cues.forEach(function (q) {
+      var v = Math.round(cueVis(q, p) * 100) / 100;
+      if (v === q.vis) return;
+      q.vis = v;
+      q.el.style.opacity = v;
+      q.el.style.transform = reduce || v === 1 ? '' : 'translate3d(0,' + ((1 - v) * 1.4).toFixed(2) + 'vh,0)';
+      q.el.style.pointerEvents = v > .5 ? '' : 'none';
+    });
+  }
+
   /* -------------------------------------------------------------------------------------------------- layout --- */
-  var W, H, B, wide, poses, top = 0, span = 1, section = $('solve');
+  var W, H, B, wide, poses, top = 0, span = 1, section = $('solve'), rests = [];
+  section.setAttribute('data-sc-span', (TOTAL + 1).toFixed(2));
 
   function focus(fx, fy, x, y, s) {
     return { x: x - (fx - .5) * B * s, y: y - (fy - .5) * B * s, s: s, rx: 0, rz: 0 };
@@ -68,34 +99,52 @@
     wide = W >= 640 && W / H >= 1.15;
     html.classList.toggle('wide', wide);
     var barH = $('bar').offsetHeight;
-    B = Math.round(wide ? Math.min(H * .74, W * .46) : Math.min(W - 24, H * .52));
+    B = Math.round(wide ? Math.min(H * .74, W * .46) : Math.min(W - 32, H * .5));
     html.style.setProperty('--b', B + 'px');
     html.style.setProperty('--board-bottom', (barH + 8 + B) + 'px');
     var box2 = [4.5 / 9, 1.5 / 9];
-    var last = wide ? null : Math.min(1, (H - barH - 268) / B);
     poses = wide ? {
       hero: { x: W * .76, y: H * .6, s: 1.12, rx: 50, rz: -22 },
       right: { x: W * .69, y: H * .52, s: 1, rx: 0, rz: 0 },
       left: { x: W * .31, y: H * .52, s: 1, rx: 0, rz: 0 },
-      centre: { x: W * .5, y: H * .53, s: 1.1, rx: 0, rz: 0 },
       box: focus(box2[0], box2[1], W * .69, H * .5, 1.8),
       away: { x: W * .5, y: H * -.6, s: .7, rx: 0, rz: 0 },
       last: { x: W * .36, y: H * .53, s: 1.05, rx: 0, rz: 0 },
     } : (function () {
       var flat = { x: W / 2, y: barH + 8 + B / 2, s: 1, rx: 0, rz: 0 };
-      var lastPose = { x: W / 2, y: barH + 8 + B * last / 2, s: last, rx: 0, rz: 0 };
+      // the last cell needs room under the board for the question and two rows of keys
+      var room = Math.min(1, (H - barH - 8 - 250) / B);
       return {
         hero: { x: W * .56, y: H * .8, s: 1.14, rx: 50, rz: -22 },
-        right: flat, left: flat, centre: flat,
+        right: flat, left: flat,
         box: focus(box2[0], box2[1], W / 2, barH + 8 + B * .42, 1.5),
         away: { x: W / 2, y: H * -.5, s: .7, rx: 0, rz: 0 },
-        last: lastPose,
+        last: { x: W / 2, y: barH + 8 + B * room / 2, s: room, rx: 0, rz: 0 },
       };
     })();
     top = section.getBoundingClientRect().top + scrollY;
     span = Math.max(1, section.offsetHeight - H);
-    railTravel = Math.max(0, $('rail').scrollWidth - W);
+    railTravel = Math.max(0, rail.scrollWidth - W);
+    placeRests();
     apply(true);
+  }
+
+  /* Where a swipe comes to rest: one point per scene, and one per screen on the rail. */
+  function placeRests() {
+    var points = [];
+    BEATS.forEach(function (b) {
+      var w = at[b[0]];
+      if (b[0] === 'rail') {
+        [].forEach.call(rail.children, function (item) {
+          var x = clamp((item.offsetLeft + item.offsetWidth / 2 - W / 2) / Math.max(1, railTravel), 0, 1);
+          points.push(w.from + (w.to - w.from) * (RAIL_FROM + (RAIL_TO - RAIL_FROM) * x));
+        });
+      } else points.push(w.from + (w.to - w.from) * b[3]);
+    });
+    var box = $('rests');
+    while (box.children.length < points.length) box.appendChild(document.createElement('i'));
+    points.forEach(function (p, i) { box.children[i].style.top = Math.round(p * span) + 'px'; });
+    rests = points;
   }
 
   function pose(a, b, t) {
@@ -143,9 +192,11 @@
     ['terminal', 'Retro Terminal', 'Premium'], ['zen', 'Zen Garden', 'Premium'], ['editorial', 'New York Editorial', 'Premium'],
     ['broadsheet', 'Broadsheet', 'Premium'], ['paper', 'Paper', 'Free'],
   ];
+  var THEME_MS = 1100;
 
   var BOX2 = units[19], BLOCKERS = [1, 48, 76], HINT_CELL = SOLVE.steps[0].pl[0][0];
-  var POINTING = SOLVE.steps[15], CLAIMING = SOLVE.steps[16], XWING = SOLVE.steps[17];
+  var XWING = SOLVE.steps[17];
+  var RAIL_FROM = .08, RAIL_TO = .94;
 
   function scene(p) {
     var l = locate(p), u = l.u, s = {
@@ -154,12 +205,14 @@
     };
     switch (l.name) {
       case 'hero': s.cam = pose('hero', 'hero', 0); s.lift = 1; break;
-      case 'lift': s.cam = pose('hero', 'box', u); s.lift = 1 - ease(u * 1.2); s.paint = { zone: u > .5 ? BOX2 : [] }; break;
-      case 'look': s.cam = pose('box', 'box', 0); s.paint = { zone: BOX2 }; break;
+      case 'look':
+        s.cam = pose('hero', 'box', range(u, 0, .45)); s.lift = 1 - ease(range(u, 0, .4));
+        s.paint = { zone: u > .35 ? BOX2 : [] };
+        break;
       case 'find':
         s.cam = pose('box', 'right', range(u, 0, .3));
         s.paint = { zone: BOX2, hit: BLOCKERS };
-        s.sweep.rays = range(u, .25, .85);
+        s.sweep.rays = range(u, .25, .8);
         break;
       case 'place':
         s.cam = pose('right', 'box', range(u, 0, .45));
@@ -167,40 +220,29 @@
         s.sweep.rays = u < .4 ? 1 : null;
         s.frame = u > .5 ? 1 : 0;
         break;
-      case 'teach': s.cam = pose('box', 'right', range(u, 0, .7)); s.frame = 1; s.paint = { target: HINT_CELL }; break;
-      case 'run': {
-        s.cam = pose('right', 'left', range(u, 0, .28));
-        s.frame = 1 + Math.round(range(u, .1, .95) * 14);
+      case 'run':
+        s.cam = pose('box', 'left', range(u, 0, .3));
+        s.frame = 1 + Math.round(range(u, .12, .84) * 14);
         s.step = SOLVE.steps[Math.max(0, s.frame - 1)];
         if (s.frame > 1) s.paint = { target: s.step.pl[0][0] };
         break;
-      }
-      case 'stall':
+      case 'stall': {
+        // the singles run out: pencil marks fill the board and the lights go out. The Pointing and Claiming steps
+        // between here and the X-Wing only clear a few marks, so they happen as the scene settles.
         s.cam = pose('left', 'right', range(u, 0, .4));
-        s.frame = 15; s.marks = range(u, .05, .8);
-        var dusk = range(u, .08, .72);
+        s.frame = u < .8 ? 15 : 17; s.marks = range(u, .05, .7);
+        var dusk = range(u, .1, .66);
         if (CAN_IRIS) { s.k = dusk > 0 ? 1 : 0; s.iris = dusk > 0 && dusk < 1 ? 1 - dusk : 0; s.irisAt = 0; }
         else s.k = ease(dusk);
         break;
-      case 'narrow':
-        s.cam = pose('right', 'right', 0); s.frame = 15; s.marks = 1; s.k = 1;
-        if (u < .5) {
-          var a = range(u, .05, .35);
-          s.step = POINTING; s.focus = 9; s.paint = { zone: units[POINTING.units[0]] };
-          if (a >= 1) { s.frame = 16; s.strike = []; } else if (a > .4) s.strike = POINTING.el;
-        } else {
-          var b = range(u, .55, .85);
-          s.frame = 16; s.step = CLAIMING; s.focus = 3; s.paint = { zone: units[CLAIMING.units[0]] };
-          if (b >= 1) { s.frame = 17; s.strike = []; } else if (b > .4) s.strike = CLAIMING.el;
-        }
-        break;
+      }
       case 'xwing': {
-        var open = range(u, .6, .84);
-        s.cam = pose('right', 'left', range(u, 0, .22));
-        s.frame = u < .62 ? 17 : 18; s.marks = 1; s.focus = 6;
+        var open = range(u, .58, .82);
+        s.cam = pose('right', 'left', range(u, 0, .2));
+        s.frame = u < .6 ? 17 : 18; s.marks = 1; s.focus = 6;
         s.paint = { zone: cellsOf(XWING.units.slice(0, 2)), corner: XWING.pat };
-        s.sweep.wing = range(u, .14, .34); s.sweep.cols = range(u, .34, .52);
-        s.strike = u > .4 && u < .62 ? XWING.el : [];
+        s.sweep.wing = range(u, .1, .28); s.sweep.cols = range(u, .28, .44);
+        s.strike = u > .36 && u < .6 ? XWING.el : [];
         s.k = open >= 1 ? 0 : 1;
         s.iris = open >= 1 ? 0 : open; s.irisAt = 100 / 900;
         if (!CAN_IRIS) { s.iris = 0; s.k = 1 - ease(open); }
@@ -208,34 +250,36 @@
       }
       case 'fall':
         s.cam = pose('left', 'left', 0);
-        s.frame = 18 + Math.round(Math.pow(range(u, .02, .94), 1.25) * (LAST_FRAME - 18));
-        s.marks = 1; s.marksOpacity = 1 - range(u, .7, .92);
+        s.frame = 18 + Math.round(Math.pow(range(u, .02, .84), 1.2) * (LAST_FRAME - 18));
+        s.marks = 1; s.marksOpacity = 1 - range(u, .55, .82);
         break;
       case 'rail':
         s.cam = pose('left', 'away', range(u, 0, .16)); s.frame = LAST_FRAME; s.board = 1 - range(u, 0, .14);
-        s.rail = range(u, .06, .96); s.railIn = range(u, .04, .12) * (1 - range(u, .95, 1));
+        s.rail = range(u, RAIL_FROM, RAIL_TO); s.railIn = range(u, .03, .1) * (1 - range(u, .96, 1));
         break;
       case 'themes': {
-        var t = THEMES[Math.min(THEMES.length - 1, Math.floor(u * THEMES.length))];
+        // the themes take turns while the scene is on screen, ending on Paper for the last cell
+        var t = THEMES[Math.min(THEMES.length - 1, Math.floor(themeMs / THEME_MS))];
         s.cam = pose('right', 'right', 0); s.frame = LAST_FRAME; s.theme = t[0]; s.themeLabel = t;
-        s.board = range(u, 0, .05) * 1;
+        s.board = range(u, 0, .08);
         s.k = t[0] === 'onyx' ? 1 : 0;
         break;
       }
       case 'last':
         s.cam = pose('right', 'last', range(u, 0, .5)); s.frame = LAST_FRAME;
         s.paint = { target: LAST_CELL };
-        s.close = range(u, .28, .5);
+        s.close = range(u, .28, .55);
         break;
     }
     return s;
   }
 
   /* -------------------------------------------------------------------------------------------------- render --- */
-  var stage = $('stage'), camera = $('camera'), tilt = $('tilt'), rail = $('rail'), railWrap = $('railWrap');
-  var themes = document.querySelector('.themes'), closeEl = $('close'), pad = $('pad');
+  var camera = $('camera'), tilt = $('tilt'), rail = $('rail'), railWrap = $('railWrap');
+  var closeEl = $('close'), pad = $('pad');
   var railTravel = 0, frameNow = 0, intro = reduce ? 1 : 0, pointer = { x: 0, y: 0, tx: 0, ty: 0 };
-  var lastTheme = '', lastBeat = '', lastTech = '', lastK = -1, solved = false, mistakes = 0, wrongDigit = 0;
+  var lastTheme = '', lastBeat = '', lastTech = '', lastK = -1, lastFlat = null, solved = false, mistakes = 0, wrongDigit = 0;
+  var themeMs = 0;
 
   function apply(force) {
     var s = scene(smooth);
@@ -248,24 +292,18 @@
     board.setStrike(s.strike);
     board.setPaint(done ? { heat: heatMap } : s.paint);
     setSweep(s.sweep);
+    setCues(smooth);
 
     if (s.k !== lastK) { html.style.setProperty('--k', s.k); lastK = s.k; }
-    if (s.theme !== lastTheme) {
-      html.setAttribute('data-theme', s.theme);
-      lastTheme = s.theme;
-    }
+    if (s.theme !== lastTheme) { html.setAttribute('data-theme', s.theme); lastTheme = s.theme; }
     if (s.themeLabel) { $('themeName').textContent = s.themeLabel[1]; $('themeTier').textContent = s.themeLabel[2]; }
-
-    if (s.beat !== lastBeat) {
-      html.setAttribute('data-now', s.beat);
-      html.classList.toggle('flat', s.lift === 0 && s.beat !== 'hero' && s.beat !== 'lift');
-      lastBeat = s.beat;
-    }
+    if (s.beat !== lastBeat) { html.setAttribute('data-now', s.beat); lastBeat = s.beat; }
+    var flat = s.lift === 0;
+    if (flat !== lastFlat) { html.classList.toggle('flat', flat); lastFlat = flat; }
 
     var cam = s.cam;
     if (reduce) {
-      var still = poses[wide ? 'right' : 'centre'];
-      if (s.beat === 'last') still = poses.last;
+      var still = s.beat === 'last' ? poses.last : poses.right;
       cam = { x: still.x, y: still.y, s: still.s, rx: 0, rz: 0 };
       if (s.beat === 'rail') s.board = 0;
     }
@@ -276,7 +314,6 @@
     html.style.setProperty('--marks', s.marksOpacity.toFixed(2));
     camera.style.opacity = s.board.toFixed(2);
 
-    var iris = $('iris');
     if (s.iris > 0) {
       var cx = cam.x, cy = cam.y + s.irisAt * B * cam.s;
       iris.style.display = 'block';
@@ -299,13 +336,25 @@
     }
 
     var name = s.step ? s.step.t : '';
-    if (name && name !== lastTech) {
-      $('tech').textContent = name; $('tech2').textContent = name; lastTech = name;
-    }
+    if (name && name !== lastTech) { $('tech').textContent = name; lastTech = name; }
   }
 
   /* --------------------------------------------------------------------------------------------- scroll loop --- */
-  var smooth = 0, dwell = {}, lastT = 0, clockMs = 0, started = false, held = false;
+  var smooth = 0, dwell = {}, lastT = 0, clockMs = 0, started = false, held = false, rush = false;
+
+  /* Plays the story toward where the scroll is, one scene at that scene's own pace. Further than a scene away it
+     fast-forwards, so a long scroll or the skip link still gets there quickly. */
+  function chase(target, dt) {
+    if (reduce) return target;
+    var from = toScenes(smooth), to = toScenes(target), gap = to - from;
+    if (Math.abs(gap) < .0005) { rush = false; return target; }
+    var here = BEATS[Math.min(BEATS.length - 1, Math.floor(from))];
+    var pace = 1 / here[2];                                         // scenes per second
+    if (Math.abs(gap) > 1.15) pace *= 4;
+    if (rush) pace *= 3;
+    var step = Math.min(Math.abs(gap), pace * dt / 1000, Math.abs(gap) * .2 + .002);
+    return toP(from + Math.sign(gap) * step);
+  }
 
   function tick(t) {
     requestAnimationFrame(tick);
@@ -322,16 +371,22 @@
     }
     pointer.x += (pointer.tx - pointer.x) * .08;
     pointer.y += (pointer.ty - pointer.y) * .08;
-    var before = smooth;
-    smooth += (target - smooth) * (reduce ? 1 : .16);
-    if (Math.abs(target - smooth) < .00002) smooth = target;
-    var moving = smooth !== before || intro < 1 || Math.abs(pointer.tx - pointer.x) > .002 || Math.abs(pointer.ty - pointer.y) > .002;
+    var before = smooth, theme = Math.floor(themeMs / THEME_MS);
+    smooth = chase(target, dt);
+    themeMs = lastBeat === 'themes' ? themeMs + dt : 0;
+    var moving = smooth !== before || intro < 1 || Math.floor(themeMs / THEME_MS) !== theme || lastBeat === 'themes' ||
+      Math.abs(pointer.tx - pointer.x) > .002 || Math.abs(pointer.ty - pointer.y) > .002;
     if (intro < 1) intro = Math.min(1, intro + dt / 1300);
     if (moving) apply(false);
   }
 
-  /* The whole story from one number, 0 to 1: how the ad's scenes will be rendered frame by frame. */
-  window.SudokuFilm = { seek: function (p) { held = true; smooth = clamp(p, 0, 1); intro = 1; apply(false); } };
+  /* The whole story from one number, 0 to 1, held still: how the ad's scenes will be rendered frame by frame.
+     [ms] sets how long the themes scene has been on screen. */
+  window.SudokuFilm = {
+    seek: function (p, ms) { held = true; smooth = clamp(p, 0, 1); themeMs = ms || 0; intro = 1; apply(false); },
+    /** The story position [u] of the way through scene [name], for seek. */
+    at: function (name, u) { var w = at[name]; return w.from + (w.to - w.from) * (u || 0); },
+  };
 
   function clockText(sec) { return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }
 
@@ -341,6 +396,13 @@
       pointer.ty = e.clientY / innerHeight * 2 - 1;
     }, { passive: true });
   }
+
+  /* Skip to the last cell: the solve fast-forwards on the way there. */
+  $('skip').addEventListener('click', function (e) {
+    e.preventDefault();
+    rush = true;
+    scrollTo({ top: top + rests[rests.length - 1] * span, behavior: reduce ? 'auto' : 'smooth' });
+  });
 
   /* ------------------------------------------------------------------------------ the last cell is the visitor's */
   var heatMap = {};
@@ -394,11 +456,10 @@
   function showResult() {
     var sec = Math.floor(clockMs / 1000), time = clockText(sec);
     var earned = [mistakes <= 1, true, true];
-    var perfect = earned.every(Boolean);
     $('stars').innerHTML = earned.map(function (on, i) {
       return '<span class="star' + (on ? ' on' : '') + (i === 1 ? ' big' : '') + '" style="--i:' + i + '">' + STAR + '</span>';
     }).join('');
-    $('resultTitle').textContent = perfect && mistakes === 0 ? 'Perfect game' : 'Solved';
+    $('resultTitle').textContent = mistakes === 0 ? 'Perfect game' : 'Solved';
     $('scoreMistakes').textContent = mistakes;
     $('scoreMistakesLabel').textContent = mistakes === 1 ? 'mistake' : 'mistakes';
     $('scoreTime').textContent = time;
@@ -423,6 +484,7 @@
   document.body.appendChild(iris);
 
   closeEl.style.visibility = 'hidden'; closeEl.inert = true; closeEl.__on = false;
+  if (touch) html.classList.add('touch');
 
   new IntersectionObserver(function (e) { html.classList.toggle('past', e[0].isIntersecting); }, { rootMargin: '0px 0px -100% 0px' }).observe($('get'));
 

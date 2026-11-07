@@ -21,9 +21,9 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/newsreader.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter.woff2" crossorigin>
-<link rel="stylesheet" href="engine/scrollcraft.css">
-<link rel="stylesheet" href="assets/site.css">
-<noscript><link rel="stylesheet" href="assets/nojs.css"></noscript>
+<link rel="stylesheet" href="engine/scrollcraft.css?v=2">
+<link rel="stylesheet" href="assets/site.css?v=2">
+<noscript><link rel="stylesheet" href="assets/nojs.css?v=2"></noscript>
 <script>document.documentElement.classList.remove('no-js');</script>
 <script type="application/ld+json">
 {
@@ -49,27 +49,30 @@
     <span>The Sudoku Method</span>
   </a>
   <p class="clock" aria-hidden="true"><b id="clock">0:00</b> <span id="mistakes">0 mistakes</span></p>
+  <a class="skip" id="skip" href="#close">Skip to the end</a>
   <p class="get" data-cta>Coming soon to Google Play</p>
 </header>
 
 <main id="top">
-  <section id="solve" data-sc-act="pin" data-sc-span="12.4" aria-label="A Sudoku solved one move at a time">
+  <section id="solve" data-sc-act="pin" data-sc-span="11.2" aria-label="A Sudoku solved one move at a time">
     <div data-sc-stage class="stage" id="stage">
       <div class="texture" aria-hidden="true"></div>
 
-      <div class="camera" id="camera" aria-hidden="true">
-        <div class="tilt" id="tilt">
-          <div class="board" id="board"></div>
+      <div class="lens">
+        <div class="camera" id="camera" aria-hidden="true">
+          <div class="tilt" id="tilt">
+            <div class="board" id="board"></div>
+          </div>
         </div>
       </div>
 
-      <div class="hero" data-beat="hero lift" data-hold-start>
+      <div class="hero" data-beat="hero" data-hold-start>
         <h1>There is always a&nbsp;next&nbsp;move.</h1>
         <p class="lede">The Sudoku Method is logic-only Sudoku for Android. It teaches you how to find that move.</p>
         <p class="get get--solid" data-cta>Coming soon to Google Play</p>
       </div>
 
-      <article class="note card" data-beat="look">
+      <article class="note card" data-beat="look" data-window="0.35 1">
         <h2><span class="count">1/3</span> Look in this box</h2>
         <p>One digit has only one cell left here.</p>
       </article>
@@ -80,10 +83,7 @@
       <article class="note card" data-beat="place">
         <h2><span class="count">3/3</span> It's a 5</h2>
         <p>It's the only cell in this box that can hold a 5.</p>
-      </article>
-      <article class="note" data-beat="teach">
-        <h2>Hints teach before they tell.</h2>
-        <p>Where to look, why it works, and only then the digit. All three steps count as one hint.</p>
+        <p class="aside">Where to look, why, then the digit. All three count as one hint.</p>
       </article>
 
       <article class="note note--r" data-beat="run">
@@ -94,18 +94,13 @@
 
       <article class="note" data-beat="stall">
         <h2>Then the easy digits run out.</h2>
-        <p>Pencil in what's still possible, and start reading the board.</p>
+        <p>Pencil marks show what's still possible. The lessons teach you to read them.</p>
       </article>
-      <article class="note" data-beat="narrow">
-        <h2>Now you read the marks.</h2>
-        <p>11 short chapters take you from the rules to advanced techniques, with practice on real boards.</p>
-        <p class="tech" aria-hidden="true"><span id="tech2">Pointing</span></p>
-      </article>
-      <article class="note note--r" data-beat="xwing" data-window="0.02 0.6">
+      <article class="note note--r" data-beat="xwing" data-window="0.02 1">
         <h2>X-Wing</h2>
         <p>In each of these two rows, the 6 has just two cells left, and they line up. So the rest of those two columns can't be a 6.</p>
       </article>
-      <article class="note note--r" data-beat="fall" data-window="0 0.82">
+      <article class="note note--r" data-beat="fall">
         <h2>One idea opens the whole board.</h2>
       </article>
 
@@ -126,10 +121,6 @@
           <figure>
             <img src="assets/screens/report.jpg" width="675" height="1400" fetchpriority="low" decoding="async" alt="A report after a solve: where the player got stuck, a link to the lesson, and what to try next.">
             <figcaption><b>Your report</b> After each solve: your blind spots, the techniques you used and what to try next.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/screens/stats.jpg" width="675" height="1400" fetchpriority="low" decoding="async" alt="The Statistics screen, showing perfect games, streaks and best times.">
-            <figcaption><b>Statistics</b> Perfect games, streaks and best times, for every difficulty.</figcaption>
           </figure>
         </div>
       </section>
@@ -161,6 +152,7 @@
         </div>
       </div>
     </div>
+    <div class="rests" id="rests" aria-hidden="true"></div>
   </section>
 
   <section class="after" id="get">
@@ -224,9 +216,9 @@
   </nav>
 </footer>
 
-<script src="engine/scrollcraft.js" defer></script>
-<script src="assets/solve.js" defer></script>
-<script src="assets/board.js" defer></script>
-<script src="assets/page.js" defer></script>
+<script src="engine/scrollcraft.js?v=2" defer></script>
+<script src="assets/solve.js?v=2" defer></script>
+<script src="assets/board.js?v=2" defer></script>
+<script src="assets/page.js?v=2" defer></script>
 </body>
 </html>

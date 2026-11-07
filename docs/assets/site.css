@@ -69,7 +69,7 @@ a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px
   color: var(--ink);
   font-size: .9rem;
 }
-.brand { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; font-weight: 500; letter-spacing: -.01em; }
+.brand { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; font-weight: 500; letter-spacing: -.01em; white-space: nowrap; }
 .mark { width: 24px; height: 24px; flex: none; }
 .mark text { font-family: "Newsreader", Georgia, serif; }
 .clock { margin: 0 0 0 auto; color: var(--soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -77,11 +77,25 @@ a { color: inherit; text-underline-offset: .18em; text-decoration-thickness: 1px
 .bar .get { margin: 0; color: var(--soft); white-space: nowrap; }
 .bar .get::before { content: ""; display: inline-block; width: 1px; height: 1em; margin-right: var(--sc-4); vertical-align: -.15em; background: var(--grid); }
 .bar .is-live { color: var(--ink); font-weight: 500; }
+.skip { color: var(--soft); white-space: nowrap; text-decoration: underline; text-decoration-color: var(--grid); }
+.skip:hover { color: var(--ink); }
+html[data-now="hero"] .skip, html[data-now="last"] .skip, html.past .skip { visibility: hidden; }
 html[data-now="hero"] .clock, html[data-now="lift"] .clock,
 html[data-now="hero"] .bar .get, html[data-now="lift"] .bar .get { visibility: hidden; }
 
 html.past .bar { background: var(--bg); box-shadow: 0 1px 0 var(--grid); }
 html.past .clock { visibility: hidden; }
+
+/* Where a swipe comes to rest. On touch screens each one is a stop, so one swipe moves one scene. */
+.rests { position: absolute; inset: 0; pointer-events: none; }
+.rests i { position: absolute; left: 0; width: 1px; height: 1px; }
+@media (pointer: coarse) {
+  html { scroll-snap-type: y mandatory; }
+  .rests i { scroll-snap-align: start; scroll-snap-stop: always; }
+  .after { scroll-snap-align: start; }
+  .foot { scroll-snap-align: end; }
+}
+html:not(.no-js) [data-beat] { opacity: 0; }
 
 /* ------------------------------------------------------------------------------------------------ the stage --- */
 .stage { background: var(--bg); color: var(--ink); isolation: isolate; }
@@ -94,7 +108,10 @@ html[data-theme="swiss"] .texture { background:
   linear-gradient(#005A9C, #005A9C) 0 100% / 2.4vmin 46vmin no-repeat; }
 html[data-theme="editorial"] .texture { background: linear-gradient(#111, #111) 0 56px / 100% 6px no-repeat; }
 
-.camera { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 1; perspective: 1700px; }
+.lens { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+/* On a phone the words sit under the board, so a board zoomed in on one box is cut off where they begin. */
+html:not(.wide).flat .lens { clip-path: inset(0 0 calc(100% - var(--board-bottom) - 2px) 0); }
+.camera { position: absolute; left: 0; top: 0; width: 0; height: 0; perspective: 1700px; }
 .tilt, .board { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; }
 .board { left: calc(var(--b) / -2); top: calc(var(--b) / -2); width: var(--b); height: var(--b); }
 .plate {
@@ -208,6 +225,7 @@ a.get--solid:active { transform: scale(.97); }
 }
 .card h2 { font-family: var(--sc-font-text); font-size: var(--sc-t-lg); font-weight: 600; letter-spacing: -.01em; margin-bottom: var(--sc-2); }
 .card p { font-size: 1.0625rem; }
+.aside { margin-top: var(--sc-3) !important; padding-top: var(--sc-3); border-top: 1px solid var(--grid); font-size: .95rem !important; }
 .count { color: var(--soft); font-weight: 400; margin-right: .25em; font-variant-numeric: tabular-nums; }
 
 .tech { margin-top: var(--sc-5) !important; font-size: 1rem !important; color: var(--ink) !important; font-weight: 500; }
@@ -291,10 +309,10 @@ html:not(.wide) .hero { left: var(--gutter); right: var(--gutter); top: calc(56p
 html:not(.wide) .hero h1 { font-size: clamp(2.5rem, 11.4vw, 4.6rem); }
 html:not(.wide) .lede { margin: var(--sc-3) 0 var(--sc-4); font-size: 1.05rem; }
 html:not(.wide) .note, html:not(.wide) .themes {
-  left: max(12px, calc(50% - 24rem)); right: max(12px, calc(50% - 24rem)); width: auto;
-  top: calc(var(--board-bottom) + 14px); translate: none;
+  left: max(16px, calc(50% - 24rem)); right: max(16px, calc(50% - 24rem)); width: auto;
+  top: calc(var(--board-bottom) + 16px); translate: none;
 }
-html:not(.wide) .note--r { left: max(12px, calc(50% - 24rem)); right: max(12px, calc(50% - 24rem)); }
+html:not(.wide) .note--r { left: max(16px, calc(50% - 24rem)); right: max(16px, calc(50% - 24rem)); }
 html:not(.wide) .note:not(.card), html:not(.wide) .themes { padding-inline: 8px; }
 html:not(.wide) .note h2 { font-size: clamp(1.7rem, 7.6vw, 2.6rem); margin-bottom: var(--sc-2); }
 html:not(.wide) .note p { font-size: 1.02rem; line-height: 1.42; }
@@ -312,11 +330,11 @@ html:not(.wide) .rail figcaption { width: auto; font-size: .98rem; }
 html:not(.wide) .rail figcaption b { font-size: 1.5rem; }
 html:not(.wide) .rail-lead { width: 76vw; }
 
-html:not(.wide) .close { left: max(12px, calc(50% - 24rem)); right: max(12px, calc(50% - 24rem)); top: auto; bottom: calc(10px + env(safe-area-inset-bottom)); translate: none; padding-inline: 8px; }
+html:not(.wide) .close { left: max(16px, calc(50% - 24rem)); right: max(16px, calc(50% - 24rem)); top: auto; bottom: calc(10px + env(safe-area-inset-bottom)); translate: none; padding-inline: 8px; }
 html:not(.wide) .ask h2 { font-size: 1.7rem; margin-bottom: var(--sc-1); }
 html:not(.wide) .ask > p { font-size: .98rem; line-height: 1.35; margin-bottom: var(--sc-3); min-height: 2.7em; }
-html:not(.wide) .pad { max-width: none; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; }
-html:not(.wide) .pad button { aspect-ratio: 1 / 1.25; border-radius: 10px; font-size: 1.3rem; }
+html:not(.wide) .pad { max-width: 26rem; gap: 6px; }
+html:not(.wide) .pad button { aspect-ratio: auto; height: 52px; border-radius: 12px; font-size: 1.45rem; }
 html:not(.wide).solved .close { padding: var(--sc-4); background: var(--surface); border-radius: 20px; box-shadow: 0 -4px 30px -10px hsl(217 33% 17% / .24); }
 html:not(.wide) .result h2 { font-size: 1.8rem; margin-bottom: 0; }
 html:not(.wide) .stars { justify-content: center; margin-bottom: var(--sc-1); }
@@ -331,8 +349,8 @@ html:not(.wide) .result .get--solid { display: block; text-align: center; }
 @media (max-width: 560px) {
   html:not([data-now="hero"]):not([data-now="lift"]) .brand span { display: none; }
   .bar { gap: var(--sc-3); }
-  .bar .get::before { margin-right: var(--sc-3); }
-  .bar .get { font-size: .82rem; }
+  .bar .get { display: none; }
+  .skip { margin-left: var(--sc-1); }
   .plans, .faq { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) { .plans { grid-template-columns: 1fr; } .faq { grid-template-columns: 1fr; } }

@@ -10,6 +10,10 @@ home page becomes a "Get it on Google Play" link.
 ## When AdMob is set up
 Add `docs/app-ads.txt` with the line AdMob gives you. It must sit at the root of the site.
 
+## Releasing a change
+GitHub Pages lets browsers keep files for ten minutes, so when a CSS or JS file changes, raise the `?v=` number on its
+links in `index.html`. Visitors then get the new files at once instead of a mix of old and new.
+
 ## How the page works
 - `assets/solve.js` is a real puzzle and its real solve, exported from the app's own grader (`expert-03`).
 - `assets/board.js` draws the board. It only shows what it is told.
